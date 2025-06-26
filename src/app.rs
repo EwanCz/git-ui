@@ -1,6 +1,5 @@
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
+use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 
-use git_info::types::GitInfo;
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Constraint, Layout, Rect},
@@ -19,11 +18,11 @@ use crate::{
 pub struct App {
     pub exit: bool,
     pub page: Pages,
-    pub git: GitInfo,
     pub status_page: StatusTab,
 }
 
 const PAGESNAME: [&str; 3] = [" [1 status] ", " [2 info] ", " [3 Config] "];
+const DIRECTION: [KeyCode; 4] = [KeyCode::Up, KeyCode::Left, KeyCode::Right, KeyCode::Down];
 
 impl App {
     /// runs the application's main loop until the user quits
@@ -60,6 +59,10 @@ impl App {
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent) {
+        if key_event.modifiers == KeyModifiers::CONTROL {
+            self.change_block(key_event.code);
+            return;
+        }
         match key_event.code {
             KeyCode::Char('q') => self.exit(),
             KeyCode::Char(char @ '1'..='3') => {
@@ -78,27 +81,22 @@ impl App {
 
     fn scroll_up(&mut self) {
         if self.page == Pages::StatusPAGE {
-            if self.status_page.focused_block == StatusBlocks::Diff
-                && self.status_page.line_in_file > 0
-            {
-                self.status_page.line_in_file -= 1;
-            }
-            if self.status_page.focused_block == StatusBlocks::Unstaged
-                && self.status_page.line_in_folder_unstaged > 0
-            {
-                self.status_page.line_in_folder_unstaged -= 1;
-            }
+            self.status_page.scroll_up();
         }
     }
 
     fn scroll_down(&mut self) {
         if self.page == Pages::StatusPAGE {
-            if self.status_page.focused_block == StatusBlocks::Diff {
-                self.status_page.line_in_file += 1;
-            }
-            if self.status_page.focused_block == StatusBlocks::Unstaged {
-                self.status_page.line_in_folder_unstaged += 1;
-            }
+            self.status_page.scroll_down();
+        }
+    }
+
+    fn change_block(&mut self, code: KeyCode) {
+        if !DIRECTION.contains(&code) {
+            return;
+        }
+        if self.page == Pages::StatusPAGE {
+            self.status_page.change_block(code);
         }
     }
 }

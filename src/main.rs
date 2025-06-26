@@ -16,12 +16,11 @@ fn main() -> io::Result<()> {
     let mut program = App {
         exit: false,
         page: Pages::StatusPAGE,
-        git: git_info::get(),
         status_page: StatusTab {
             line_in_file: 0,
             line_in_folder_unstaged: 0,
             line_in_folder_staged: 0,
-            focused_block: StatusBlocks::Diff,
+            focused_block: StatusBlocks::Unstaged,
         },
     };
 
