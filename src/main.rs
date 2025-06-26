@@ -21,7 +21,10 @@ fn main() -> io::Result<()> {
             line_in_folder_unstaged: 0,
             line_in_folder_staged: 0,
             focused_block: StatusBlocks::Unstaged,
-        },
+            nb_unstaged_file: 0,
+            nb_staged_file: 0,
+        }
+        .into(),
     };
 
     program.run(&mut terminal)?;

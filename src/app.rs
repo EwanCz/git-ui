@@ -10,15 +10,14 @@ use ratatui::{
 };
 use std::io;
 
-use crate::{
-    pages::Pages,
-    tabs::{StatusBlocks, StatusTab},
-};
+use std::cell::RefCell;
+
+use crate::{pages::Pages, tabs::StatusTab};
 
 pub struct App {
     pub exit: bool,
     pub page: Pages,
-    pub status_page: StatusTab,
+    pub status_page: RefCell<StatusTab>,
 }
 
 const PAGESNAME: [&str; 3] = [" [1 status] ", " [2 info] ", " [3 Config] "];
@@ -42,7 +41,7 @@ impl App {
         .areas(frame.area());
 
         if self.page == Pages::StatusPAGE {
-            self.status_page.draw(frame, content);
+            self.status_page.borrow_mut().draw(frame, content);
         }
 
         frame.render_widget(self, frame.area());
@@ -81,13 +80,13 @@ impl App {
 
     fn scroll_up(&mut self) {
         if self.page == Pages::StatusPAGE {
-            self.status_page.scroll_up();
+            self.status_page.borrow_mut().scroll_up();
         }
     }
 
     fn scroll_down(&mut self) {
         if self.page == Pages::StatusPAGE {
-            self.status_page.scroll_down();
+            self.status_page.borrow_mut().scroll_down();
         }
     }
 
@@ -96,7 +95,7 @@ impl App {
             return;
         }
         if self.page == Pages::StatusPAGE {
-            self.status_page.change_block(code);
+            self.status_page.borrow_mut().change_block(code);
         }
     }
 }

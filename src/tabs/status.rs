@@ -21,16 +21,22 @@ pub struct StatusTab {
     pub line_in_folder_unstaged: u16,
     pub line_in_folder_staged: u16,
     pub focused_block: StatusBlocks,
+    pub nb_unstaged_file: u16,
+    pub nb_staged_file: u16,
 }
 
 impl StatusTab {
-    pub fn draw(&self, frame: &mut Frame, content: Rect) {
+    pub fn draw(&mut self, frame: &mut Frame, content: Rect) {
         let [left, right] = Layout::horizontal([Constraint::Fill(1); 2]).areas(content);
         let [top_left, bottom_left] = Layout::vertical([Constraint::Fill(1); 2]).areas(left);
+
         let staged_files: Vec<GitFile> =
             get_files(".", TypeStaged::Staged).expect("Error on staged file");
         let unstaged_files: Vec<GitFile> =
             get_files(".", TypeStaged::Unstaged).expect("Error on unstaged file");
+
+        self.nb_unstaged_file = unstaged_files.len() as u16;
+        self.nb_staged_file = staged_files.len() as u16;
 
         self.draw_diff(frame, right);
         self.draw_unstaged(frame, top_left, unstaged_files);
@@ -59,6 +65,7 @@ impl StatusTab {
         } else {
             files
                 .iter()
+                .skip(self.line_in_folder_unstaged.into())
                 .map(|file| {
                     let style = match file.status {
                         'm' => Style::default().fg(Color::Yellow), // Modified
@@ -91,6 +98,7 @@ impl StatusTab {
         } else {
             files
                 .iter()
+                .skip(self.line_in_folder_staged.into())
                 .map(|file| {
                     let style = match file.status {
                         'm' => Style::default().fg(Color::Yellow), // Modified
@@ -148,8 +156,16 @@ impl StatusTab {
     pub fn scroll_down(&mut self) {
         match self.focused_block {
             StatusBlocks::Diff => self.line_in_file += 1,
-            StatusBlocks::Unstaged => self.line_in_folder_unstaged += 1,
-            StatusBlocks::Staged => self.line_in_folder_staged += 1,
+            StatusBlocks::Unstaged => {
+                if self.line_in_folder_unstaged + 1 < self.nb_unstaged_file {
+                    self.line_in_folder_unstaged += 1;
+                }
+            }
+            StatusBlocks::Staged => {
+                if self.line_in_folder_staged + 1 < self.nb_staged_file {
+                    self.line_in_folder_staged += 1;
+                }
+            }
         }
     }
 
