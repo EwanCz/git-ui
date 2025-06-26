@@ -23,6 +23,7 @@ pub struct StatusTab {
     pub focused_block: StatusBlocks,
     pub nb_unstaged_file: u16,
     pub nb_staged_file: u16,
+    pub filepath_diff: String,
 }
 
 impl StatusTab {
@@ -34,18 +35,31 @@ impl StatusTab {
             get_files(".", TypeStaged::Staged).expect("Error on staged file");
         let unstaged_files: Vec<GitFile> =
             get_files(".", TypeStaged::Unstaged).expect("Error on unstaged file");
+        let file_to_read = match self.focused_block {
+            StatusBlocks::Diff => self.filepath_diff.clone(),
+            StatusBlocks::Staged => {
+                self.get_selected_file_path(staged_files.clone(), self.line_in_folder_staged)
+            }
+            StatusBlocks::Unstaged => {
+                self.get_selected_file_path(unstaged_files.clone(), self.line_in_folder_unstaged)
+            }
+        };
 
         self.nb_unstaged_file = unstaged_files.len() as u16;
         self.nb_staged_file = staged_files.len() as u16;
 
-        self.draw_diff(frame, right);
+        self.draw_diff(frame, right, file_to_read);
         self.draw_unstaged(frame, top_left, unstaged_files);
         self.draw_staged(frame, bottom_left, staged_files);
     }
 
-    fn draw_diff(&self, frame: &mut Frame, pos: Rect) {
-        let text = fs::read_to_string("Cargo.lock")
-            .unwrap_or_else(|_| "Error: Could not read file".to_string());
+    fn get_selected_file_path(&self, files: Vec<GitFile>, pos: u16) -> String {
+        files[pos as usize].filename.clone()
+    }
+
+    fn draw_diff(&self, frame: &mut Frame, pos: Rect, file: String) {
+        let text =
+            fs::read_to_string(file).unwrap_or_else(|_| "Cannot not read this file".to_string());
 
         let diff =
             Paragraph::new(text)

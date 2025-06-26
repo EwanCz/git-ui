@@ -23,6 +23,7 @@ fn main() -> io::Result<()> {
             focused_block: StatusBlocks::Unstaged,
             nb_unstaged_file: 0,
             nb_staged_file: 0,
+            filepath_diff: String::new(),
         }
         .into(),
     };
