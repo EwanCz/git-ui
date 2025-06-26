@@ -11,14 +11,16 @@ use ratatui::{
 };
 use std::io;
 
-use crate::pages::Pages;
-use crate::status::{Status, StatusBlocks};
+use crate::{
+    pages::Pages,
+    tabs::{StatusBlocks, StatusTab},
+};
 
 pub struct App {
     pub exit: bool,
     pub page: Pages,
     pub git: GitInfo,
-    pub status_page: Status,
+    pub status_page: StatusTab,
 }
 
 const PAGESNAME: [&str; 3] = [" [1 status] ", " [2 info] ", " [3 Config] "];
