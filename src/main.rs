@@ -8,7 +8,7 @@ mod tabs;
 use tabs::{StatusBlocks, StatusTab};
 
 mod git;
-use git::Git;
+use git::{CommitMode, Git};
 
 mod pages;
 use pages::Pages;
@@ -31,7 +31,13 @@ fn main() -> io::Result<()> {
             filepath_diff: String::new(),
         }
         .into(),
-        git: Git { repo: repository },
+        git: Git {
+            repo: repository,
+            input_text: String::new(),
+            character_index: 0,
+            commit_mode: CommitMode::Normal,
+            messages: Vec::new(),
+        },
     };
 
     program.run(&mut terminal)?;

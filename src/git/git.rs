@@ -1,12 +1,28 @@
-use git2::{build::CheckoutBuilder, Error as GitError, Repository};
+use git2::{Error as GitError, Repository};
 use std::path::Path;
+
+#[derive(PartialEq)]
+pub enum CommitMode {
+    Normal,
+    Commit,
+}
+
+use ratatui::{
+    layout::{Constraint, Flex, Layout, Rect},
+    widgets::{Block, Clear, Paragraph},
+    Frame,
+};
 
 pub struct Git {
     pub repo: Repository,
+    pub input_text: String,
+    pub character_index: usize,
+    pub commit_mode: CommitMode,
+    pub messages: Vec<String>,
 }
 
 impl Git {
-    pub fn add(&self, filepath: &str) -> Result<(), git2::Error> {
+    pub fn add(&self, filepath: &str) -> Result<(), GitError> {
         let mut index = self.repo.index()?;
         index.add_path(Path::new(filepath))?;
         index.write()?;
@@ -48,5 +64,25 @@ impl Git {
 
         index.write()?;
         Ok(())
+    }
+
+    pub fn change_commit_mode(&mut self) {
+        self.commit_mode = match self.commit_mode {
+            CommitMode::Normal => CommitMode::Commit,
+            CommitMode::Commit => CommitMode::Normal,
+        }
+    }
+
+    pub fn draw_commit(&self, frame: &mut Frame, content: Rect) {
+        let block = Block::bordered().title("Commit");
+        let text = Paragraph::new("test").centered().block(block);
+
+        let vertical = Layout::vertical([Constraint::Percentage(20)]).flex(Flex::Center);
+        let horizontal = Layout::horizontal([Constraint::Percentage(60)]).flex(Flex::Center);
+        let [content] = vertical.areas(content);
+        let [content] = horizontal.areas(content);
+
+        frame.render_widget(Clear, content);
+        frame.render_widget(text, content);
     }
 }

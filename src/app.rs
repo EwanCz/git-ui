@@ -13,7 +13,7 @@ use std::io;
 use std::cell::RefCell;
 
 use crate::{
-    git::Git,
+    git::{CommitMode, Git},
     pages::Pages,
     tabs::{StatusBlocks, StatusTab},
 };
@@ -49,6 +49,9 @@ impl App {
             self.status_page
                 .borrow_mut()
                 .draw(frame, content, &self.git);
+            if self.git.commit_mode == CommitMode::Commit {
+                self.git.draw_commit(frame, content);
+            }
         }
 
         frame.render_widget(self, frame.area());
@@ -91,6 +94,11 @@ impl App {
                     let _ = self
                         .git
                         .restore_staged(&self.status_page.borrow_mut().filepath_diff);
+                }
+            }
+            KeyCode::Char('c') => {
+                if self.page == Pages::StatusPAGE {
+                    self.git.change_commit_mode();
                 }
             }
             _ => {}
