@@ -33,7 +33,7 @@ fn main() -> io::Result<()> {
         .into(),
         git: Git {
             repo: repository,
-            input_text: String::new(),
+            input: String::new(),
             character_index: 0,
             commit_mode: CommitMode::Normal,
             messages: Vec::new(),

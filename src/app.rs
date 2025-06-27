@@ -68,6 +68,10 @@ impl App {
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent) {
+        if self.git.commit_mode == CommitMode::Commit {
+            self.git.commit_key_event(key_event);
+            return;
+        }
         if key_event.modifiers == KeyModifiers::CONTROL {
             self.change_block(key_event.code);
             return;
