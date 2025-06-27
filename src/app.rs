@@ -12,12 +12,17 @@ use std::io;
 
 use std::cell::RefCell;
 
-use crate::{pages::Pages, tabs::StatusTab};
+use crate::{
+    git::Git,
+    pages::Pages,
+    tabs::{StatusBlocks, StatusTab},
+};
 
 pub struct App {
     pub exit: bool,
     pub page: Pages,
     pub status_page: RefCell<StatusTab>,
+    pub git: Git,
 }
 
 const PAGESNAME: [&str; 3] = [" [1 status] ", " [2 info] ", " [3 Config] "];
@@ -41,7 +46,9 @@ impl App {
         .areas(frame.area());
 
         if self.page == Pages::StatusPAGE {
-            self.status_page.borrow_mut().draw(frame, content);
+            self.status_page
+                .borrow_mut()
+                .draw(frame, content, &self.git);
         }
 
         frame.render_widget(self, frame.area());
@@ -63,13 +70,29 @@ impl App {
             return;
         }
         match key_event.code {
-            KeyCode::Char('q') => self.exit(),
+            KeyCode::Char('q') | KeyCode::Esc => self.exit(),
             KeyCode::Char(char @ '1'..='3') => {
                 let nb: u32 = char.to_digit(10).unwrap();
                 self.page = self.page.change_page(nb - 1);
             }
             KeyCode::Down => self.scroll_down(),
             KeyCode::Up => self.scroll_up(),
+            KeyCode::Char('a') => {
+                if self.page == Pages::StatusPAGE
+                    && self.status_page.borrow_mut().focused_block == StatusBlocks::Unstaged
+                {
+                    let _ = self.git.add(&self.status_page.borrow_mut().filepath_diff);
+                }
+            }
+            KeyCode::Char('r') => {
+                if self.page == Pages::StatusPAGE
+                    && self.status_page.borrow_mut().focused_block == StatusBlocks::Staged
+                {
+                    let _ = self
+                        .git
+                        .restore_staged(&self.status_page.borrow_mut().filepath_diff);
+                }
+            }
             _ => {}
         }
     }

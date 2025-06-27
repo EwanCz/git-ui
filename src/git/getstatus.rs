@@ -1,5 +1,6 @@
-use git2::{Repository, Status, StatusOptions};
+use git2::{Status, StatusOptions};
 
+use crate::git::Git;
 #[derive(Debug, Clone)]
 pub struct GitFile {
     pub filename: String,
@@ -43,12 +44,11 @@ impl GitFile {
     }
 }
 
-pub fn get_files(repo_path: &str, typeneeded: TypeStaged) -> Result<Vec<GitFile>, git2::Error> {
-    let repo = Repository::open(repo_path)?;
+pub fn get_files(git: &Git, typeneeded: TypeStaged) -> Result<Vec<GitFile>, git2::Error> {
     let mut status_options = StatusOptions::new();
     status_options.include_untracked(true);
 
-    let statuses = repo.statuses(Some(&mut status_options))?;
+    let statuses = git.repo.statuses(Some(&mut status_options))?;
     let mut all_file = Vec::new();
 
     for entry in statuses.iter() {

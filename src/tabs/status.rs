@@ -7,7 +7,7 @@ use ratatui::{
 };
 use std::fs;
 
-use crate::git::{get_files, GitFile, TypeStaged};
+use crate::git::{get_files, Git, GitFile, TypeStaged};
 
 #[derive(PartialEq, Eq)]
 pub enum StatusBlocks {
@@ -27,14 +27,14 @@ pub struct StatusTab {
 }
 
 impl StatusTab {
-    pub fn draw(&mut self, frame: &mut Frame, content: Rect) {
+    pub fn draw(&mut self, frame: &mut Frame, content: Rect, git: &Git) {
         let [left, right] = Layout::horizontal([Constraint::Fill(1); 2]).areas(content);
         let [top_left, bottom_left] = Layout::vertical([Constraint::Fill(1); 2]).areas(left);
 
         let staged_files: Vec<GitFile> =
-            get_files(".", TypeStaged::Staged).expect("Error on staged file");
+            get_files(git, TypeStaged::Staged).expect("Error on staged file");
         let unstaged_files: Vec<GitFile> =
-            get_files(".", TypeStaged::Unstaged).expect("Error on unstaged file");
+            get_files(git, TypeStaged::Unstaged).expect("Error on unstaged file");
         let file_to_read = match self.focused_block {
             StatusBlocks::Diff => self.filepath_diff.clone(),
             StatusBlocks::Staged => {
@@ -53,8 +53,13 @@ impl StatusTab {
         self.draw_staged(frame, bottom_left, staged_files);
     }
 
-    fn get_selected_file_path(&self, files: Vec<GitFile>, pos: u16) -> String {
-        files[pos as usize].filename.clone()
+    fn get_selected_file_path(&mut self, files: Vec<GitFile>, pos: u16) -> String {
+        if !files.is_empty() {
+            self.filepath_diff = files[pos as usize].filename.clone();
+            files[pos as usize].filename.clone()
+        } else {
+            String::new()
+        }
     }
 
     fn draw_diff(&self, frame: &mut Frame, pos: Rect, file: String) {
@@ -94,7 +99,7 @@ impl StatusTab {
                 .collect()
         };
         if self.focused_block == StatusBlocks::Unstaged {
-            items[0] = items[0].clone().on_red();
+            items[0] = items[0].clone().on_dark_gray();
         }
         let unstaged_list = List::new(items)
             .block(self.make_status_block(
@@ -128,7 +133,7 @@ impl StatusTab {
         };
 
         if self.focused_block == StatusBlocks::Staged {
-            items[0] = items[0].clone().on_red();
+            items[0] = items[0].clone().on_dark_gray();
         }
 
         let staged_list = List::new(items)

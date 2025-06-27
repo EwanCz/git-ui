@@ -1,3 +1,4 @@
+use git2::Repository;
 use std::io;
 
 mod app;
@@ -7,12 +8,16 @@ mod tabs;
 use tabs::{StatusBlocks, StatusTab};
 
 mod git;
+use git::Git;
 
 mod pages;
 use pages::Pages;
 
 fn main() -> io::Result<()> {
     let mut terminal = ratatui::init();
+    let repository = Repository::open(".")
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Git error: {}", e)))?;
+
     let mut program = App {
         exit: false,
         page: Pages::StatusPAGE,
@@ -26,6 +31,7 @@ fn main() -> io::Result<()> {
             filepath_diff: String::new(),
         }
         .into(),
+        git: Git { repo: repository },
     };
 
     program.run(&mut terminal)?;
