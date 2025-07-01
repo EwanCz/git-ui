@@ -13,7 +13,7 @@ use std::io;
 use std::cell::RefCell;
 
 use crate::{
-    git::{CommitMode, Git},
+    git::{CommitMode, Git, PushMode},
     pages::Pages,
     tabs::{StatusBlocks, StatusTab},
 };
@@ -52,6 +52,9 @@ impl App {
             if self.git.commit_mode == CommitMode::Commit {
                 self.git.draw_commit(frame, content);
             }
+            if self.git.push_mode == PushMode::Push {
+                self.git.draw_push(frame, content);
+            }
         }
 
         frame.render_widget(self, frame.area());
@@ -68,6 +71,10 @@ impl App {
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent) {
+        if self.git.push_mode == PushMode::Push {
+            self.git.push_key_event(key_event);
+            return;
+        }
         if self.git.commit_mode == CommitMode::Commit {
             self.git.commit_key_event(key_event);
             return;
@@ -103,6 +110,11 @@ impl App {
             KeyCode::Char('c') => {
                 if self.page == Pages::StatusPAGE {
                     self.git.change_commit_mode();
+                }
+            }
+            KeyCode::Char('p') => {
+                if self.page == Pages::StatusPAGE {
+                    self.git.push_mode = PushMode::Push;
                 }
             }
             _ => {}

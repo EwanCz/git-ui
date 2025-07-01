@@ -8,15 +8,17 @@ mod tabs;
 use tabs::{StatusBlocks, StatusTab};
 
 mod git;
-use git::{CommitMode, Git};
+use git::{CommitMode, Git, PushMode};
 
 mod pages;
 use pages::Pages;
 
 fn main() -> io::Result<()> {
+    let repository = match Repository::open(".") {
+        Ok(repo) => repo,
+        Err(e) => panic!("failed to open: {}", e),
+    };
     let mut terminal = ratatui::init();
-    let repository = Repository::open(".")
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("Git error: {}", e)))?;
 
     let mut program = App {
         exit: false,
@@ -33,10 +35,13 @@ fn main() -> io::Result<()> {
         .into(),
         git: Git {
             repo: repository,
+            branch: String::from("master"),
             input: String::new(),
             character_index: 0,
             commit_mode: CommitMode::Normal,
             messages: Vec::new(),
+            push_mode: PushMode::Normal,
+            push_message: String::from("Are you sure you want to push your work ?"),
         },
     };
 
