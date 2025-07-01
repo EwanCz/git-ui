@@ -1,14 +1,13 @@
 use crossterm::event::{KeyCode, KeyEvent};
 use git2::{Error as GitError, Repository};
-use std::path::Path;
-
-use crate::git::{Commit, CommitMode, Push, PushMode};
-
 use ratatui::{
     layout::{Constraint, Flex, Layout, Rect},
     widgets::{Block, Clear, Paragraph},
     Frame,
 };
+use std::path::Path;
+
+use crate::git::{Commit, CommitMode, Push, PushMode};
 
 pub struct Git {
     pub repo: Repository,
@@ -118,9 +117,14 @@ impl Git {
 
     pub fn push_key_event(&mut self, key_event: KeyEvent) {
         match key_event.code {
-            KeyCode::Esc => self.push_mode = PushMode::Normal,
+            KeyCode::Esc => {
+                self.push_mode = PushMode::Normal;
+                self.push_message = String::from("Are you sure you want to push your work ?");
+            }
             KeyCode::Enter => {
-                let _ = self.execute_push();
+                let _ = self
+                    .execute_push()
+                    .unwrap_or_else(|git_error| git_error.message().to_string());
             }
             _ => {}
         }
