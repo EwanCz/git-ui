@@ -122,7 +122,7 @@ impl Git {
                 self.push_message = String::from("Are you sure you want to push your work ?");
             }
             KeyCode::Enter => {
-                let _ = self
+                self.push_message = self
                     .execute_push()
                     .unwrap_or_else(|git_error| git_error.message().to_string());
             }
