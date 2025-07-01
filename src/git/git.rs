@@ -119,7 +119,9 @@ impl Git {
     pub fn push_key_event(&mut self, key_event: KeyEvent) {
         match key_event.code {
             KeyCode::Esc => self.push_mode = PushMode::Normal,
-            KeyCode::Enter => self.execute_push(),
+            KeyCode::Enter => {
+                let _ = self.execute_push();
+            }
             _ => {}
         }
     }
