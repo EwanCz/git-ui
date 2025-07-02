@@ -1,7 +1,7 @@
 use crossterm::event::{KeyCode, KeyEvent};
 use git2::{Error as GitError, Repository};
 use ratatui::{
-    layout::{Constraint, Flex, Layout, Rect},
+    layout::{Constraint, Flex, Layout, Position, Rect},
     widgets::{Block, Clear, Paragraph},
     Frame,
 };
@@ -74,13 +74,17 @@ impl Git {
 
     pub fn draw_commit(&self, frame: &mut Frame, content: Rect) {
         let block = Block::bordered().title("Commit");
-        let text = Paragraph::new(self.input.clone()).centered().block(block);
+        let text = Paragraph::new(self.input.clone()).block(block);
 
-        let vertical = Layout::vertical([Constraint::Percentage(20)]).flex(Flex::Center);
+        let vertical = Layout::vertical([Constraint::Max(4)]).flex(Flex::Center);
         let horizontal = Layout::horizontal([Constraint::Percentage(60)]).flex(Flex::Center);
         let [content] = vertical.areas(content);
         let [content] = horizontal.areas(content);
 
+        frame.set_cursor_position(Position::new(
+            content.x + 1 + self.character_index as u16,
+            content.y + 1,
+        ));
         frame.render_widget(Clear, content);
         frame.render_widget(text, content);
     }
