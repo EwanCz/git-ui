@@ -1,4 +1,3 @@
-use git2::Repository;
 use std::io;
 
 mod app;
@@ -8,15 +7,19 @@ mod tabs;
 use tabs::{StatusBlocks, StatusTab};
 
 mod git;
-use git::{CommitMode, Git, PushMode};
+use git::{get_repository, CommitMode, Git, PushMode};
 
 mod pages;
 use pages::Pages;
 
 fn main() -> io::Result<()> {
-    let repository = match Repository::open(".") {
+    let repository = match get_repository() {
         Ok(repo) => repo,
-        Err(e) => panic!("failed to open: {}", e),
+        Err(_e) => {
+            eprintln!("❌ Failed to find repository");
+            eprintln!("Ether to deep or missing git folder");
+            std::process::exit(1);
+        }
     };
     let mut terminal = ratatui::init();
 
