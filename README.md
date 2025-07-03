@@ -37,14 +37,14 @@ Maximun deepth is set to 5
 
 ## ⌨️ Keybindings
 
-### Global
+### 🌐 Global
 - `q` - Quit
 - `1-2-3` - Switch between panels with your number
 - `?` - Show help
 - `Up/Down` - Navigate in blocks
 - `Control direction` - Navigate between blocks
 
-### Status panels
+### 📝 Status panels
 
 - `c` - launch commit mode
 #### commit mode
@@ -82,9 +82,9 @@ Maximun deepth is set to 5
 - [x] simple push handling
 
 ### 🚧 In Progress
-- [x] diff viewer (currently reading the file)
-- [x] push fonctionnality that might be unstable on branch
-- [x] multi threading to get push loading bar
+- [ ] diff viewer (currently reading the file)
+- [ ] push fonctionnality that might be unstable on branch
+- [ ] multi threading to get push loading bar
 
 ### 📋 Planned Features
 
@@ -95,10 +95,6 @@ Maximun deepth is set to 5
 - [ ] Configuration file support
 - [ ] Remote repository operations
 - [ ] Stash management
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 📚 Learning Resources
 
