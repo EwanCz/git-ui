@@ -250,6 +250,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "git-ui"
+version = "0.1.0"
+dependencies = [
+ "crossterm 0.29.0",
+ "git2",
+ "ratatui",
+]
+
+[[package]]
 name = "git2"
 version = "0.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -262,15 +271,6 @@ dependencies = [
  "openssl-probe",
  "openssl-sys",
  "url",
-]
-
-[[package]]
-name = "gitui"
-version = "0.1.0"
-dependencies = [
- "crossterm 0.29.0",
- "git2",
- "ratatui",
 ]
 
 [[package]]
