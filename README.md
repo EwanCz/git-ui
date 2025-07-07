@@ -15,6 +15,7 @@ This project serves a dual purpose:
 
 - Rust 1.70+ installed ([rustup.rs](https://rustup.rs/))
 - Git installed and configured
+- Git-delta package for diff ([Git-delta](https://github.com/dandavison/delta))
 
 ### From Source
 
@@ -80,9 +81,9 @@ Maximun deepth is set to 5
 - [x] Basic TUI layout with panels
 - [x] Commit entry with message
 - [x] simple push handling
+- [x] diff viewer (if no diff show raw file)
 
 ### 🚧 In Progress
-- [ ] diff viewer (currently reading the file)
 - [ ] push fonctionnality that might be unstable on branch
 - [ ] multi threading to get push loading bar
 

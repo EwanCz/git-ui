@@ -5,7 +5,7 @@ use ratatui::{
     layout::{Alignment, Constraint, Layout, Rect},
     style::{Color, Style},
     text::{Line, Span},
-    widgets::{Paragraph, Widget},
+    widgets::{Clear, Paragraph, Widget},
     DefaultTerminal, Frame,
 };
 use std::io;
@@ -45,6 +45,7 @@ impl App {
         ])
         .areas(frame.area());
 
+        frame.render_widget(Clear, frame.area());
         if self.page == Pages::StatusPAGE {
             self.status_page
                 .borrow_mut()
@@ -56,7 +57,6 @@ impl App {
                 self.git.draw_push(frame, content);
             }
         }
-
         frame.render_widget(self, frame.area());
     }
 

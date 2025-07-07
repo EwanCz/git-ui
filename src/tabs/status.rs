@@ -2,12 +2,12 @@ use crossterm::event::KeyCode;
 use ratatui::{
     layout::{Constraint, Layout, Rect},
     style::{Color, Style, Stylize},
-    widgets::{Block, List, ListItem, Paragraph},
+    text::Text,
+    widgets::{Block, Clear, List, ListItem, Paragraph},
     Frame,
 };
-use std::fs;
 
-use crate::git::{get_files, Git, GitFile, TypeStaged};
+use crate::git::{get_file_diff, get_files, Git, GitFile, TypeStaged};
 
 #[derive(PartialEq, Eq)]
 pub enum StatusBlocks {
@@ -63,8 +63,11 @@ impl StatusTab {
     }
 
     fn draw_diff(&self, frame: &mut Frame, pos: Rect, file: String) {
-        let text =
-            fs::read_to_string(file).unwrap_or_else(|_| "Cannot not read this file".to_string());
+        let text = match get_file_diff(&file) {
+            // Retourne Text avec styles
+            Ok(styled_text) => styled_text,
+            Err(e) => Text::from(e),
+        };
 
         let diff =
             Paragraph::new(text)
@@ -75,6 +78,7 @@ impl StatusTab {
                 ))
                 .scroll((self.line_in_file, 0));
 
+        frame.render_widget(Clear, pos);
         frame.render_widget(diff, pos);
     }
 
@@ -176,11 +180,13 @@ impl StatusTab {
         match self.focused_block {
             StatusBlocks::Diff => self.line_in_file += 1,
             StatusBlocks::Unstaged => {
+                self.line_in_file = 0;
                 if self.line_in_folder_unstaged + 1 < self.nb_unstaged_file {
                     self.line_in_folder_unstaged += 1;
                 }
             }
             StatusBlocks::Staged => {
+                self.line_in_file = 0;
                 if self.line_in_folder_staged + 1 < self.nb_staged_file {
                     self.line_in_folder_staged += 1;
                 }
