@@ -3,11 +3,14 @@ use ratatui::{
     layout::{Constraint, Layout, Rect},
     style::{Color, Style, Stylize},
     text::Text,
-    widgets::{Block, Clear, List, ListItem, Paragraph},
+    widgets::{Clear, List, ListItem, Paragraph},
     Frame,
 };
 
-use crate::git::{get_file_diff, get_files, Git, GitFile, TypeStaged};
+use crate::{
+    git::{get_file_diff, get_files, Git, GitFile, TypeStaged},
+    tabs::mover::Move,
+};
 
 #[derive(PartialEq, Eq)]
 pub enum StatusBlocks {
@@ -150,33 +153,18 @@ impl StatusTab {
         frame.render_widget(staged_list, pos);
     }
 
-    fn make_status_block(&self, focus: bool, title: String) -> Block {
-        if focus {
-            Block::bordered().title(title).bold()
-        } else {
-            Block::bordered().title(title)
+    pub fn handle_pos_in_blocks(&mut self, block: StatusBlocks) {
+        if StatusBlocks::Unstaged == block && self.line_in_folder_unstaged != 0 {
+            self.line_in_folder_unstaged -= 1;
+        }
+        if StatusBlocks::Staged == block && self.line_in_folder_staged != 0 {
+            self.line_in_folder_staged -= 1;
         }
     }
+}
 
-    pub fn change_block(&mut self, code: KeyCode) {
-        if self.focused_block != StatusBlocks::Diff && code == KeyCode::Right {
-            self.focused_block = StatusBlocks::Diff;
-            return;
-        }
-        if self.focused_block == StatusBlocks::Diff && code == KeyCode::Left {
-            self.focused_block = StatusBlocks::Unstaged;
-            return;
-        }
-        if self.focused_block == StatusBlocks::Unstaged && code == KeyCode::Down {
-            self.focused_block = StatusBlocks::Staged;
-            return;
-        }
-        if self.focused_block == StatusBlocks::Staged && code == KeyCode::Up {
-            self.focused_block = StatusBlocks::Unstaged;
-        }
-    }
-
-    pub fn scroll_down(&mut self) {
+impl Move for StatusTab {
+    fn scroll_down(&mut self) {
         match self.focused_block {
             StatusBlocks::Diff => self.line_in_file += 1,
             StatusBlocks::Unstaged => {
@@ -194,7 +182,7 @@ impl StatusTab {
         }
     }
 
-    pub fn scroll_up(&mut self) {
+    fn scroll_up(&mut self) {
         match self.focused_block {
             StatusBlocks::Diff => {
                 if self.line_in_file > 0 {
@@ -213,13 +201,21 @@ impl StatusTab {
             }
         }
     }
-
-    pub fn handle_pos_in_blocks(&mut self, block: StatusBlocks) {
-        if StatusBlocks::Unstaged == block && self.line_in_folder_unstaged != 0 {
-            self.line_in_folder_unstaged -= 1;
+    fn change_block(&mut self, code: KeyCode) {
+        if self.focused_block != StatusBlocks::Diff && code == KeyCode::Right {
+            self.focused_block = StatusBlocks::Diff;
+            return;
         }
-        if StatusBlocks::Staged == block && self.line_in_folder_staged != 0 {
-            self.line_in_folder_staged -= 1;
+        if self.focused_block == StatusBlocks::Diff && code == KeyCode::Left {
+            self.focused_block = StatusBlocks::Unstaged;
+            return;
+        }
+        if self.focused_block == StatusBlocks::Unstaged && code == KeyCode::Down {
+            self.focused_block = StatusBlocks::Staged;
+            return;
+        }
+        if self.focused_block == StatusBlocks::Staged && code == KeyCode::Up {
+            self.focused_block = StatusBlocks::Unstaged;
         }
     }
 }
