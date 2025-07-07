@@ -1,4 +1,4 @@
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
+use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 
 use ratatui::{
     buffer::Buffer,
@@ -15,7 +15,7 @@ use std::cell::RefCell;
 use crate::{
     git::{CommitMode, Git, PushMode},
     pages::Pages,
-    tabs::{StatusBlocks, StatusTab},
+    tabs::StatusTab,
 };
 
 pub struct App {
@@ -26,7 +26,6 @@ pub struct App {
 }
 
 const PAGESNAME: [&str; 3] = [" [1 status] ", " [2 info] ", " [3 Config] "];
-const DIRECTION: [KeyCode; 4] = [KeyCode::Up, KeyCode::Left, KeyCode::Right, KeyCode::Down];
 
 impl App {
     /// runs the application's main loop until the user quits
@@ -79,9 +78,13 @@ impl App {
             self.git.commit_key_event(key_event);
             return;
         }
-        if key_event.modifiers == KeyModifiers::CONTROL {
-            self.change_block(key_event.code);
-            return;
+        match self.page {
+            Pages::StatusPAGE => self
+                .status_page
+                .borrow_mut()
+                .handle_key_event(key_event, &mut self.git),
+            Pages::InfoPAGE => {}
+            Pages::ConfigPage => {}
         }
         match key_event.code {
             KeyCode::Char('q') | KeyCode::Esc => self.exit(),
@@ -89,75 +92,12 @@ impl App {
                 let nb: u32 = char.to_digit(10).unwrap();
                 self.page = self.page.change_page(nb - 1);
             }
-            KeyCode::Down => self.scroll_down(),
-            KeyCode::Up => self.scroll_up(),
-            KeyCode::Char('a') => {
-                if self.page == Pages::StatusPAGE
-                    && self.status_page.borrow_mut().focused_block == StatusBlocks::Unstaged
-                {
-                    let add = self.git.add(&self.status_page.borrow_mut().filepath_diff);
-                    match add {
-                        Ok(_value) => self
-                            .status_page
-                            .borrow_mut()
-                            .handle_pos_in_blocks(StatusBlocks::Unstaged),
-                        Err(_e) => {}
-                    };
-                }
-            }
-            KeyCode::Char('r') => {
-                if self.page == Pages::StatusPAGE
-                    && self.status_page.borrow_mut().focused_block == StatusBlocks::Staged
-                {
-                    let restore = self
-                        .git
-                        .restore_staged(&self.status_page.borrow_mut().filepath_diff);
-                    match restore {
-                        Ok(_value) => self
-                            .status_page
-                            .borrow_mut()
-                            .handle_pos_in_blocks(StatusBlocks::Staged),
-                        Err(_e) => {}
-                    };
-                }
-            }
-            KeyCode::Char('c') => {
-                if self.page == Pages::StatusPAGE {
-                    self.git.change_commit_mode();
-                }
-            }
-            KeyCode::Char('p') => {
-                if self.page == Pages::StatusPAGE {
-                    self.git.push_mode = PushMode::Push;
-                }
-            }
             _ => {}
         }
     }
 
     fn exit(&mut self) {
         self.exit = true
-    }
-
-    fn scroll_up(&mut self) {
-        if self.page == Pages::StatusPAGE {
-            self.status_page.borrow_mut().scroll_up();
-        }
-    }
-
-    fn scroll_down(&mut self) {
-        if self.page == Pages::StatusPAGE {
-            self.status_page.borrow_mut().scroll_down();
-        }
-    }
-
-    fn change_block(&mut self, code: KeyCode) {
-        if !DIRECTION.contains(&code) {
-            return;
-        }
-        if self.page == Pages::StatusPAGE {
-            self.status_page.borrow_mut().change_block(code);
-        }
     }
 }
 

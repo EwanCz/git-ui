@@ -1,4 +1,4 @@
-use crossterm::event::KeyCode;
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
     layout::{Constraint, Layout, Rect},
     style::{Color, Style, Stylize},
@@ -8,8 +8,8 @@ use ratatui::{
 };
 
 use crate::{
-    git::{get_file_diff, get_files, Git, GitFile, TypeStaged},
-    tabs::mover::Move,
+    git::{get_file_diff, get_files, Git, GitFile, PushMode, TypeStaged},
+    tabs::mover::{Move, DIRECTION},
 };
 
 #[derive(PartialEq, Eq)]
@@ -30,6 +30,42 @@ pub struct StatusTab {
 }
 
 impl StatusTab {
+    pub fn handle_key_event(&mut self, key_event: KeyEvent, git: &mut Git) {
+        if key_event.modifiers == KeyModifiers::CONTROL {
+            self.change_block(key_event.code);
+            return;
+        }
+        match key_event.code {
+            KeyCode::Down => self.scroll_down(),
+            KeyCode::Up => self.scroll_up(),
+            KeyCode::Char('c') => {
+                git.change_commit_mode();
+            }
+            KeyCode::Char('p') => {
+                git.push_mode = PushMode::Push;
+            }
+            KeyCode::Char('a') => {
+                if self.focused_block == StatusBlocks::Unstaged {
+                    let add = git.add(&self.filepath_diff);
+                    match add {
+                        Ok(_value) => self.handle_pos_in_blocks(StatusBlocks::Unstaged),
+                        Err(_e) => {}
+                    };
+                }
+            }
+            KeyCode::Char('r') => {
+                if self.focused_block == StatusBlocks::Staged {
+                    let restore = git.restore_staged(&self.filepath_diff);
+                    match restore {
+                        Ok(_value) => self.handle_pos_in_blocks(StatusBlocks::Staged),
+                        Err(_e) => {}
+                    };
+                }
+            }
+            _ => {}
+        }
+    }
+
     pub fn draw(&mut self, frame: &mut Frame, content: Rect, git: &Git) {
         let [left, right] = Layout::horizontal([Constraint::Fill(1); 2]).areas(content);
         let [top_left, bottom_left] = Layout::vertical([Constraint::Fill(1); 2]).areas(left);
@@ -202,6 +238,9 @@ impl Move for StatusTab {
         }
     }
     fn change_block(&mut self, code: KeyCode) {
+        if !DIRECTION.contains(&code) {
+            return;
+        }
         if self.focused_block != StatusBlocks::Diff && code == KeyCode::Right {
             self.focused_block = StatusBlocks::Diff;
             return;

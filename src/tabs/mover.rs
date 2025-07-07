@@ -1,6 +1,8 @@
 use crossterm::event::KeyCode;
 use ratatui::{style::Stylize, widgets::Block};
 
+pub const DIRECTION: [KeyCode; 4] = [KeyCode::Up, KeyCode::Left, KeyCode::Right, KeyCode::Down];
+
 pub trait Move {
     fn scroll_down(&mut self);
 
