@@ -213,4 +213,13 @@ impl StatusTab {
             }
         }
     }
+
+    pub fn handle_pos_in_blocks(&mut self, block: StatusBlocks) {
+        if StatusBlocks::Unstaged == block && self.line_in_folder_unstaged != 0 {
+            self.line_in_folder_unstaged -= 1;
+        }
+        if StatusBlocks::Staged == block && self.line_in_folder_staged != 0 {
+            self.line_in_folder_staged -= 1;
+        }
+    }
 }

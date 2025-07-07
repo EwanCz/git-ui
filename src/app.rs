@@ -95,16 +95,30 @@ impl App {
                 if self.page == Pages::StatusPAGE
                     && self.status_page.borrow_mut().focused_block == StatusBlocks::Unstaged
                 {
-                    let _ = self.git.add(&self.status_page.borrow_mut().filepath_diff);
+                    let add = self.git.add(&self.status_page.borrow_mut().filepath_diff);
+                    match add {
+                        Ok(_value) => self
+                            .status_page
+                            .borrow_mut()
+                            .handle_pos_in_blocks(StatusBlocks::Unstaged),
+                        Err(_e) => {}
+                    };
                 }
             }
             KeyCode::Char('r') => {
                 if self.page == Pages::StatusPAGE
                     && self.status_page.borrow_mut().focused_block == StatusBlocks::Staged
                 {
-                    let _ = self
+                    let restore = self
                         .git
                         .restore_staged(&self.status_page.borrow_mut().filepath_diff);
+                    match restore {
+                        Ok(_value) => self
+                            .status_page
+                            .borrow_mut()
+                            .handle_pos_in_blocks(StatusBlocks::Staged),
+                        Err(_e) => {}
+                    };
                 }
             }
             KeyCode::Char('c') => {
