@@ -1,25 +1,45 @@
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use git2::BranchType;
 use ratatui::{
     layout::{Constraint, Layout, Rect},
-    widgets::{List, Paragraph},
+    widgets::Paragraph,
     Frame,
 };
 
-use crate::git::Git;
+use crate::{
+    git::Git,
+    tabs::mover::{Move, DIRECTION},
+};
+
+#[derive(PartialEq)]
+pub enum BranchBlock {
+    Local,
+    Remote,
+}
 
 pub struct BranchTab {
-    pub value: u32,
+    pub pos_local_branches: u16,
+    pub pos_remote_branches: u16,
+    pub focused_block: BranchBlock,
 }
 
 impl BranchTab {
     pub fn new() -> Self {
-        BranchTab { value: 0 }
+        BranchTab {
+            pos_local_branches: 0,
+            pos_remote_branches: 0,
+            focused_block: BranchBlock::Local,
+        }
     }
 
     pub fn handle_key_event(&mut self, key_event: KeyEvent) {
+        if key_event.modifiers == KeyModifiers::CONTROL {
+            self.change_block(key_event.code);
+            return;
+        }
         match key_event.code {
-            KeyCode::Char('w') => println!("tmp"),
-            KeyCode::Char('q') => println!("tmp2"),
+            KeyCode::Up => self.scroll_up(),
+            KeyCode::Down => self.scroll_down(),
             _ => {}
         }
     }
@@ -27,8 +47,11 @@ impl BranchTab {
     pub fn draw(&self, frame: &mut Frame, content: Rect, git: &Git) {
         let [top, bottom] =
             Layout::vertical([Constraint::Length(2), Constraint::Fill(1)]).areas(content);
+        let [bottom_left, bottom_right] =
+            Layout::horizontal([Constraint::Percentage(50), Constraint::Fill(1)]).areas(bottom);
 
-        self.draw_list_of_branche(frame, bottom, git);
+        self.draw_local_branches(frame, bottom_left, git);
+        self.draw_remote_branches(frame, bottom_right, git);
         self.draw_current_branch(frame, top, git);
     }
 
@@ -37,14 +60,84 @@ impl BranchTab {
         frame.render_widget(zone, area);
     }
 
-    fn draw_list_of_branche(&self, frame: &mut Frame, area: Rect, git: &Git) {
-        let items: List = git.branch.branches.clone().into_iter().collect();
-        frame.render_widget(items, area);
+    fn draw_local_branches(&self, frame: &mut Frame, area: Rect, git: &Git) {
+        let block = self.make_status_block(
+            self.focused_block == BranchBlock::Local,
+            "Branches".to_string(),
+        );
+        let text = git
+            .branch
+            .branches
+            .iter()
+            .filter(|branch| branch.state == BranchType::Local)
+            .map(|branch| branch.name.clone())
+            .collect::<Vec<String>>()
+            .join("\n");
+        let paragraph = Paragraph::new(text)
+            .centered()
+            .scroll((self.pos_local_branches, 0))
+            .block(block);
+        frame.render_widget(paragraph, area);
+    }
+
+    fn draw_remote_branches(&self, frame: &mut Frame, area: Rect, git: &Git) {
+        let block = self.make_status_block(
+            self.focused_block == BranchBlock::Remote,
+            "Remote".to_string(),
+        );
+        let text = git
+            .branch
+            .branches
+            .iter()
+            .filter(|branch| branch.state == BranchType::Remote)
+            .map(|branch| branch.name.clone())
+            .collect::<Vec<String>>()
+            .join("\n");
+        let paragraph = Paragraph::new(text)
+            .centered()
+            .scroll((self.pos_remote_branches, 0))
+            .block(block);
+        frame.render_widget(paragraph, area);
     }
 }
 
 impl Default for BranchTab {
     fn default() -> Self {
         BranchTab::new()
+    }
+}
+
+impl Move for BranchTab {
+    fn scroll_up(&mut self) {
+        match self.focused_block {
+            BranchBlock::Local => {
+                if self.pos_local_branches > 0 {
+                    self.pos_local_branches -= 1;
+                }
+            }
+            BranchBlock::Remote => {
+                if self.pos_remote_branches > 0 {
+                    self.pos_remote_branches -= 1;
+                }
+            }
+        }
+    }
+
+    fn scroll_down(&mut self) {
+        match self.focused_block {
+            BranchBlock::Remote => self.pos_remote_branches += 1,
+            BranchBlock::Local => self.pos_local_branches += 1,
+        }
+    }
+
+    fn change_block(&mut self, code: KeyCode) {
+        if !DIRECTION.contains(&code) {
+            return;
+        }
+        match code {
+            KeyCode::Left => self.focused_block = BranchBlock::Local,
+            KeyCode::Right => self.focused_block = BranchBlock::Remote,
+            _ => {}
+        }
     }
 }

@@ -1,8 +1,14 @@
-use git2::{Error as GitError, Repository};
+use git2::{BranchType, Error as GitError, Repository};
+
+#[derive(Clone)]
+pub struct BranchInfo {
+    pub name: String,
+    pub state: BranchType,
+}
 
 pub struct Branch {
     pub current: String,
-    pub branches: Vec<String>,
+    pub branches: Vec<BranchInfo>,
 }
 
 impl Branch {
@@ -17,7 +23,10 @@ impl Branch {
             },
             branches: match Branch::get_list_branches(repo) {
                 Ok(list) => list,
-                Err(_e) => vec!["cannot get list of branches".to_string()],
+                Err(_e) => vec![BranchInfo {
+                    name: "cannot get list of branches".to_string(),
+                    state: BranchType::Local,
+                }],
             },
         }
     }
@@ -32,17 +41,20 @@ impl Branch {
         }
     }
 
-    fn get_list_branches(repo: &Repository) -> Result<Vec<String>, git2::Error> {
+    fn get_list_branches(repo: &Repository) -> Result<Vec<BranchInfo>, git2::Error> {
         let branches = repo.branches(None)?; // None = toutes les branches
-        let mut branch_names = Vec::new();
+        let mut branch_list = Vec::new();
 
         for branch_result in branches {
-            let (branch, _branch_type) = branch_result?;
+            let (branch, branch_type) = branch_result?;
             if let Some(name) = branch.name()? {
-                branch_names.push(name.to_string());
+                branch_list.push(BranchInfo {
+                    name: name.to_string(),
+                    state: branch_type,
+                });
             }
         }
 
-        Ok(branch_names)
+        Ok(branch_list)
     }
 }

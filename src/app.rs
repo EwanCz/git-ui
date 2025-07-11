@@ -95,7 +95,9 @@ impl App {
                 .status_page
                 .borrow_mut()
                 .handle_key_event(key_event, &mut self.git),
-            Pages::BranchPAGE => {}
+            Pages::BranchPAGE => {
+                self.branch_page.handle_key_event(key_event);
+            }
             Pages::ConfigPage => {}
         }
         match key_event.code {
