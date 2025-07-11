@@ -15,17 +15,18 @@ use std::cell::RefCell;
 use crate::{
     git::{CommitMode, Git, PushMode},
     pages::Pages,
-    tabs::StatusTab,
+    tabs::{BranchTab, StatusTab},
 };
 
 pub struct App {
     pub exit: bool,
     pub page: Pages,
     pub status_page: RefCell<StatusTab>,
+    pub branch_page: BranchTab,
     pub git: Git,
 }
 
-const PAGESNAME: [&str; 3] = [" [1 status] ", " [2 info] ", " [3 Config] "];
+const PAGESNAME: [&str; 3] = [" [1 status] ", " [2 Branch] ", " [3 Config] "];
 
 impl App {
     /// runs the application's main loop until the user quits
@@ -48,16 +49,22 @@ impl App {
         .areas(frame.area());
 
         frame.render_widget(Clear, frame.area());
-        if self.page == Pages::StatusPAGE {
-            self.status_page
-                .borrow_mut()
-                .draw(frame, content, &self.git);
-            if self.git.commit_mode == CommitMode::Commit {
-                self.git.draw_commit(frame, content);
+        match self.page {
+            Pages::StatusPAGE => {
+                self.status_page
+                    .borrow_mut()
+                    .draw(frame, content, &self.git);
+                if self.git.commit_mode == CommitMode::Commit {
+                    self.git.draw_commit(frame, content);
+                }
+                if self.git.push_mode == PushMode::Push {
+                    self.git.draw_push(frame, content);
+                }
             }
-            if self.git.push_mode == PushMode::Push {
-                self.git.draw_push(frame, content);
+            Pages::BranchPAGE => {
+                self.branch_page.draw(frame, content, &self.git);
             }
+            _ => {}
         }
         frame.render_widget(self, frame.area());
     }
@@ -88,7 +95,7 @@ impl App {
                 .status_page
                 .borrow_mut()
                 .handle_key_event(key_event, &mut self.git),
-            Pages::InfoPAGE => {}
+            Pages::BranchPAGE => {}
             Pages::ConfigPage => {}
         }
         match key_event.code {

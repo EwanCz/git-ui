@@ -13,6 +13,8 @@ use git::{get_repository, Git};
 mod pages;
 use pages::Pages;
 
+use crate::tabs::BranchTab;
+
 fn main() -> io::Result<()> {
     let repository = match get_repository() {
         Ok(repo) => repo,
@@ -36,6 +38,7 @@ fn main() -> io::Result<()> {
         exit: false,
         page: Pages::StatusPAGE,
         status_page: StatusTab::new().into(),
+        branch_page: BranchTab::new(),
         git: Git::new(repository, current_branch),
     };
 
