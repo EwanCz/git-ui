@@ -82,16 +82,17 @@ Maximun deepth is set to 5
 - [x] Commit entry with message
 - [x] simple push handling
 - [x] diff viewer (if no diff show raw file)
+- [x] multi threading to get push loading bar
 
 ### 🚧 In Progress
 - [ ] push fonctionnality that might be unstable on branch
-- [ ] multi threading to get push loading bar
+- [ ] Branch switching and creation
 
 ### 📋 Planned Features
 
 - [ ] complete push option
-- [ ] Branch switching and creation
 - [ ] pull option
+- [ ] help menu
 - [ ] clone / init / branch creation / checkout
 - [ ] Configuration file support
 - [ ] Remote repository operations
