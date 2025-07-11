@@ -41,7 +41,6 @@ fn main() -> io::Result<()> {
 
     program.run(&mut terminal)?;
     ratatui::restore();
-    println!("{}", program.git.branch);
     Ok(())
 }
 

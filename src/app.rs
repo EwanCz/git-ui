@@ -1,4 +1,4 @@
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
+use crossterm::event::{poll, Event, KeyCode, KeyEvent, KeyEventKind};
 
 use ratatui::{
     buffer::Buffer,
@@ -8,7 +8,7 @@ use ratatui::{
     widgets::{Clear, Paragraph, Widget},
     DefaultTerminal, Frame,
 };
-use std::io;
+use std::{io, time::Duration};
 
 use std::cell::RefCell;
 
@@ -31,11 +31,11 @@ impl App {
     /// runs the application's main loop until the user quits
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         while !self.exit {
-            if self.git.push_process && self.page == Pages::StatusPAGE {
-                self.git.update_push_status();
-            }
-            terminal.draw(|frame| self.draw(frame))?;
+            //if self.git.push_process && self.page == Pages::StatusPAGE {
+            //    self.git.update_push_status();
+            //}
             self.handle_events()?;
+            terminal.draw(|frame| self.draw(frame))?;
         }
         Ok(())
     }
@@ -63,12 +63,14 @@ impl App {
     }
 
     fn handle_events(&mut self) -> io::Result<()> {
-        match event::read()? {
-            Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
-                self.handle_key_event(key_event)
-            }
-            _ => {}
-        };
+        if poll(Duration::from_millis(100))? {
+            match crossterm::event::read()? {
+                Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
+                    self.handle_key_event(key_event)
+                }
+                _ => {}
+            };
+        }
         Ok(())
     }
 
