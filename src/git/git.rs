@@ -5,9 +5,9 @@ use ratatui::{
     widgets::{Block, Clear, Paragraph},
     Frame,
 };
-use std::path::Path;
+use std::{path::Path, sync::mpsc, thread};
 
-use crate::git::{Commit, CommitMode, Push, PushMode};
+use crate::git::{execute_push, get_repository, Commit, CommitMode, PushMode};
 
 pub struct Git {
     pub repo: Repository,
@@ -18,9 +18,26 @@ pub struct Git {
     pub commit_mode: CommitMode,
     pub push_mode: PushMode,
     pub push_message: String,
+    pub push_process: bool,
+    pub rx_push: Option<mpsc::Receiver<String>>,
 }
 
 impl Git {
+    pub fn new(repository: Repository, current_branch: String) -> Self {
+        Git {
+            repo: repository,
+            branch: current_branch,
+            input: String::new(),
+            character_index: 0,
+            commit_mode: CommitMode::Normal,
+            messages: Vec::new(),
+            push_mode: PushMode::Normal,
+            push_message: String::from("Are you sure you want to push your work ?"),
+            push_process: false,
+            rx_push: None,
+        }
+    }
+
     pub fn add(&self, filepath: &str) -> Result<(), GitError> {
         let mut index = self.repo.index()?;
         index.add_path(Path::new(filepath))?;
@@ -126,11 +143,50 @@ impl Git {
                 self.push_message = String::from("Are you sure you want to push your work ?");
             }
             KeyCode::Enter => {
-                self.push_message = self
-                    .execute_push()
-                    .unwrap_or_else(|git_error| git_error.message().to_string());
+                if self.push_process {
+                    return;
+                }
+                let (tx, rx) = mpsc::channel();
+                self.rx_push = Some(rx);
+                self.push_process = true;
+                self.push_message = "🔄 Initializing push...".to_string();
+
+                let repo = match get_repository() {
+                    Ok(value) => value,
+                    Err(_e) => {
+                        self.push_message = "❌ Push failed: Can't get actual repo".to_string();
+                        return;
+                    }
+                };
+                let branch = self.branch.clone();
+
+                thread::spawn(move || match execute_push(repo, branch, tx.clone()) {
+                    Ok(value) => {
+                        tx.send(value).unwrap();
+                    }
+                    Err(error) => {
+                        tx.send(format!("❌ Push failed: {}", error.message()))
+                            .unwrap();
+                    }
+                });
             }
             _ => {}
+        }
+    }
+
+    pub fn update_push_status(&mut self) {
+        if let Some(rx) = &self.rx_push {
+            // Récupérer TOUS les messages disponibles
+            match rx.try_recv() {
+                Ok(message) => {
+                    self.push_message = message.clone();
+                    if message.starts_with("✅") || message.starts_with("❌") {
+                        self.push_process = false;
+                        self.rx_push = None;
+                    }
+                }
+                Err(_e) => {}
+            }
         }
     }
 }

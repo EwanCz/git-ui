@@ -3,7 +3,7 @@ use ratatui::{
     layout::{Constraint, Layout, Rect},
     style::{Color, Style, Stylize},
     text::Text,
-    widgets::{Clear, List, ListItem, Paragraph},
+    widgets::{List, ListItem, Paragraph},
     Frame,
 };
 
@@ -30,6 +30,17 @@ pub struct StatusTab {
 }
 
 impl StatusTab {
+    pub fn new() -> Self {
+        StatusTab {
+            line_in_file: 0,
+            line_in_folder_unstaged: 0,
+            line_in_folder_staged: 0,
+            focused_block: StatusBlocks::Unstaged,
+            nb_unstaged_file: 0,
+            nb_staged_file: 0,
+            filepath_diff: String::new(),
+        }
+    }
     pub fn handle_key_event(&mut self, key_event: KeyEvent, git: &mut Git) {
         if key_event.modifiers == KeyModifiers::CONTROL {
             self.change_block(key_event.code);
@@ -117,7 +128,6 @@ impl StatusTab {
                 ))
                 .scroll((self.line_in_file, 0));
 
-        frame.render_widget(Clear, pos);
         frame.render_widget(diff, pos);
     }
 
@@ -256,5 +266,11 @@ impl Move for StatusTab {
         if self.focused_block == StatusBlocks::Staged && code == KeyCode::Up {
             self.focused_block = StatusBlocks::Unstaged;
         }
+    }
+}
+
+impl Default for StatusTab {
+    fn default() -> Self {
+        StatusTab::new()
     }
 }

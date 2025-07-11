@@ -1,4 +1,4 @@
 mod mover;
 mod status;
 
-pub use status::{StatusBlocks, StatusTab};
+pub use status::StatusTab;

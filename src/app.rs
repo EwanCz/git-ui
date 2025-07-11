@@ -31,6 +31,9 @@ impl App {
     /// runs the application's main loop until the user quits
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         while !self.exit {
+            if self.git.push_process && self.page == Pages::StatusPAGE {
+                self.git.update_push_status();
+            }
             terminal.draw(|frame| self.draw(frame))?;
             self.handle_events()?;
         }
