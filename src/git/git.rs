@@ -143,35 +143,39 @@ impl Git {
                 self.push_message = String::from("Are you sure you want to push your work ?");
             }
             KeyCode::Enter => {
-                if self.push_process {
-                    return;
-                }
-                let (tx, rx) = mpsc::channel();
-                self.rx_push = Some(rx);
-                self.push_process = true;
-                self.push_message = "🔄 Initializing push...".to_string();
-
-                let repo = match get_repository() {
-                    Ok(value) => value,
-                    Err(_e) => {
-                        self.push_message = "❌ Push failed: Can't get actual repo".to_string();
-                        return;
-                    }
-                };
-                let branch = self.branch.clone();
-
-                thread::spawn(move || match execute_push(repo, branch, tx.clone()) {
-                    Ok(value) => {
-                        tx.send(value).unwrap();
-                    }
-                    Err(error) => {
-                        tx.send(format!("❌ Push failed: {}", error.message()))
-                            .unwrap();
-                    }
-                });
+                self.set_push();
             }
             _ => {}
         }
+    }
+
+    fn set_push(&mut self) {
+        if self.push_process {
+            return;
+        }
+        let (tx, rx) = mpsc::channel();
+        self.rx_push = Some(rx);
+        self.push_process = true;
+        self.push_message = "🔄 Initializing push...".to_string();
+
+        let repo = match get_repository() {
+            Ok(value) => value,
+            Err(_e) => {
+                self.push_message = "❌ Push failed: Can't get actual repo".to_string();
+                return;
+            }
+        };
+        let branch = self.branch.clone();
+
+        thread::spawn(move || match execute_push(repo, branch, tx.clone()) {
+            Ok(value) => {
+                tx.send(value).unwrap();
+            }
+            Err(error) => {
+                tx.send(format!("❌ Push failed: {}", error.message()))
+                    .unwrap();
+            }
+        });
     }
 
     pub fn update_push_status(&mut self) {
