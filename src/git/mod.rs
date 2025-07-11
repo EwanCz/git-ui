@@ -1,3 +1,4 @@
+mod branch;
 mod commit;
 mod diff;
 mod get_repo;
@@ -6,6 +7,7 @@ mod push;
 
 mod git;
 
+pub use branch::Branch;
 pub use commit::{Commit, CommitMode};
 pub use diff::get_file_diff;
 pub use get_repo::get_repository;

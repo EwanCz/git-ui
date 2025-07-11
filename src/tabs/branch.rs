@@ -1,7 +1,7 @@
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
     layout::{Constraint, Layout, Rect},
-    widgets::Paragraph,
+    widgets::{List, Paragraph},
     Frame,
 };
 
@@ -28,16 +28,19 @@ impl BranchTab {
         let [top, bottom] =
             Layout::vertical([Constraint::Length(2), Constraint::Fill(1)]).areas(content);
 
-        //self.draw_list_of_branche(frame, bottom, git);
+        self.draw_list_of_branche(frame, bottom, git);
         self.draw_current_branch(frame, top, git);
     }
 
     fn draw_current_branch(&self, frame: &mut Frame, area: Rect, git: &Git) {
-        let zone = Paragraph::new(format!("Current branch: {}", git.branch)).centered();
+        let zone = Paragraph::new(format!("Current branch: {}", git.branch.current)).centered();
         frame.render_widget(zone, area);
     }
 
-    //fn draw_list_of_branche(&self, frame: &mut Frame, area: Rect, git: &Git) {}
+    fn draw_list_of_branche(&self, frame: &mut Frame, area: Rect, git: &Git) {
+        let items: List = git.branch.branches.clone().into_iter().collect();
+        frame.render_widget(items, area);
+    }
 }
 
 impl Default for BranchTab {
