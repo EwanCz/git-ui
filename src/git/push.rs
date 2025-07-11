@@ -7,20 +7,8 @@ pub enum PushMode {
     Normal,
 }
 
-//pub trait Push {
 const REMOTE_NAMES: [&str; 3] = ["origin", "upstream", "master"];
-//
-//    fn execute_push(&mut self) -> Result<String, GitError>;
-//
-//    fn check_push_prerequisites(&self) -> Result<(), GitError>;
-//
-//    fn get_available_remote(&self) -> Result<git2::Remote, GitError>;
-//
-//    fn setup_authentication_callbacks(&self, callbacks: &mut RemoteCallbacks);
-//    fn try_ssh_keys_static(username: Option<&str>) -> Result<Cred, GitError>;
-//}
-//
-//impl Push for Git {
+
 pub fn execute_push(
     repo: Repository,
     branch: String,
@@ -185,4 +173,3 @@ fn try_ssh_keys_static(username: Option<&str>) -> Result<Cred, GitError> {
 
     Err(GitError::from_str("No valid SSH keys found"))
 }
-//}
