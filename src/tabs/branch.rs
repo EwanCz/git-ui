@@ -1,4 +1,5 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use git2::BranchType;
 use ratatui::{
     layout::{Constraint, Layout, Rect},
     widgets::Paragraph,
@@ -36,7 +37,7 @@ impl BranchTab {
         }
     }
 
-    pub fn handle_key_event(&mut self, key_event: KeyEvent) {
+    pub fn handle_key_event(&mut self, key_event: KeyEvent, git: &mut Git) {
         if key_event.modifiers == KeyModifiers::CONTROL {
             self.change_block(key_event.code);
             return;
@@ -44,6 +45,15 @@ impl BranchTab {
         match key_event.code {
             KeyCode::Up => self.scroll_up(),
             KeyCode::Down => self.scroll_down(),
+            KeyCode::Char('c') => {
+                let (branchtype, pos): (BranchType, usize) = match self.focused_block {
+                    BranchBlock::Local => (BranchType::Local, self.nb_local_branch as usize),
+                    BranchBlock::Remote => (BranchType::Remote, self.nb_remote_branch as usize),
+                };
+                let _ = git.branch.checkout(branchtype, pos - 1, &git.repo);
+                self.pos_local_branches = 0;
+                self.pos_remote_branches = 0;
+            }
             _ => {}
         }
     }
@@ -114,8 +124,16 @@ impl Move for BranchTab {
 
     fn scroll_down(&mut self) {
         match self.focused_block {
-            BranchBlock::Remote => self.pos_remote_branches += 1,
-            BranchBlock::Local => self.pos_local_branches += 1,
+            BranchBlock::Remote => {
+                if self.pos_remote_branches + 1 < self.nb_remote_branch {
+                    self.pos_remote_branches += 1;
+                }
+            }
+            BranchBlock::Local => {
+                if self.pos_local_branches + 1 < self.nb_local_branch {
+                    self.pos_local_branches += 1;
+                }
+            }
         }
     }
 

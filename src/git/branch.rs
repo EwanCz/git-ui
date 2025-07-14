@@ -1,4 +1,4 @@
-use git2::{BranchType, Error as GitError, Repository};
+use git2::{build::CheckoutBuilder, BranchType, Error as GitError, Repository};
 
 pub struct Branch {
     pub current: String,
@@ -27,6 +27,33 @@ impl Branch {
             local_branches: locals,
             remote_branches: remotes,
         }
+    }
+
+    pub fn checkout(
+        &mut self,
+        btype: BranchType,
+        pos: usize,
+        repo: &Repository,
+    ) -> Result<(), GitError> {
+        let branch: &str = match btype {
+            BranchType::Remote => &self.remote_branches[pos],
+            BranchType::Local => &self.local_branches[pos],
+        };
+        let mut checkout_builder = CheckoutBuilder::new();
+
+        checkout_builder
+            .allow_conflicts(true)
+            .conflict_style_merge(true);
+
+        // Trouver la branche
+        let obj = repo.revparse_single(&format!("refs/heads/{}", branch))?;
+
+        // Checkout
+        repo.checkout_tree(&obj, Some(&mut checkout_builder))?;
+        repo.set_head(&format!("refs/heads/{}", branch))?;
+
+        self.current = branch.to_string();
+        Ok(())
     }
 
     fn get_current_branch_name(repo: &Repository) -> Result<String, GitError> {

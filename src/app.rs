@@ -96,7 +96,7 @@ impl App {
                 .borrow_mut()
                 .handle_key_event(key_event, &mut self.git),
             Pages::BranchPAGE => {
-                self.branch_page.handle_key_event(key_event);
+                self.branch_page.handle_key_event(key_event, &mut self.git);
             }
             Pages::ConfigPage => {}
         }
@@ -105,6 +105,11 @@ impl App {
             KeyCode::Char(char @ '1'..='3') => {
                 let nb: u32 = char.to_digit(10).unwrap();
                 self.page = self.page.change_page(nb - 1);
+                if self.page == Pages::BranchPAGE {
+                    self.branch_page.nb_local_branch = self.git.branch.local_branches.len() as u16;
+                    self.branch_page.nb_remote_branch =
+                        self.git.branch.remote_branches.len() as u16;
+                }
             }
             _ => {}
         }
