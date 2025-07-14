@@ -7,7 +7,7 @@ use ratatui::{
 };
 
 use crate::{
-    git::Git,
+    git::{Branch, Git},
     tabs::mover::{Move, DIRECTION},
 };
 
@@ -47,12 +47,13 @@ impl BranchTab {
             KeyCode::Down => self.scroll_down(),
             KeyCode::Char('c') => {
                 let (branchtype, pos): (BranchType, usize) = match self.focused_block {
-                    BranchBlock::Local => (BranchType::Local, self.nb_local_branch as usize),
-                    BranchBlock::Remote => (BranchType::Remote, self.nb_remote_branch as usize),
+                    BranchBlock::Local => (BranchType::Local, self.pos_local_branches as usize),
+                    BranchBlock::Remote => (BranchType::Remote, self.pos_remote_branches as usize),
                 };
-                let _ = git.branch.checkout(branchtype, pos - 1, &git.repo);
+                let _ = git.branch.checkout(branchtype, pos, &git.repo);
                 self.pos_local_branches = 0;
                 self.pos_remote_branches = 0;
+                git.branch = Branch::new(&git.repo);
             }
             _ => {}
         }

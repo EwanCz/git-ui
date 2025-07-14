@@ -45,14 +45,32 @@ impl Branch {
             .allow_conflicts(true)
             .conflict_style_merge(true);
 
-        // Trouver la branche
-        let obj = repo.revparse_single(&format!("refs/heads/{}", branch))?;
+        match btype {
+            BranchType::Local => {
+                // Checkout existing local branch
+                let obj = repo.revparse_single(&format!("refs/heads/{}", branch))?;
+                repo.checkout_tree(&obj, Some(&mut checkout_builder))?;
+                repo.set_head(&format!("refs/heads/{}", branch))?;
+            }
+            BranchType::Remote => {
+                // Find remote branch by name
+                let remote_branch = repo.find_branch(branch, git2::BranchType::Remote)?;
+                let commit = remote_branch.get().peel_to_commit()?;
 
-        // Checkout
-        repo.checkout_tree(&obj, Some(&mut checkout_builder))?;
-        repo.set_head(&format!("refs/heads/{}", branch))?;
+                // Create local tracking branch
+                let local_name = branch.strip_prefix("origin/").unwrap_or(branch);
+                let local_branch = repo.branch(local_name, &commit, false)?;
 
-        self.current = branch.to_string();
+                // Set upstream
+                let mut local_branch = local_branch;
+                local_branch.set_upstream(Some(branch))?;
+
+                // Checkout
+                repo.checkout_tree(commit.as_object(), Some(&mut checkout_builder))?;
+                repo.set_head(&format!("refs/heads/{}", local_name))?;
+            }
+        };
+
         Ok(())
     }
 
