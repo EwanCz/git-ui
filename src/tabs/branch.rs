@@ -1,5 +1,4 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use git2::BranchType;
 use ratatui::{
     layout::{Constraint, Layout, Rect},
     widgets::Paragraph,
@@ -20,6 +19,9 @@ pub enum BranchBlock {
 pub struct BranchTab {
     pub pos_local_branches: u16,
     pub pos_remote_branches: u16,
+    pub nb_remote_branch: u16,
+    pub nb_local_branch: u16,
+
     pub focused_block: BranchBlock,
 }
 
@@ -28,6 +30,8 @@ impl BranchTab {
         BranchTab {
             pos_local_branches: 0,
             pos_remote_branches: 0,
+            nb_local_branch: 0,
+            nb_remote_branch: 0,
             focused_block: BranchBlock::Local,
         }
     }
@@ -65,15 +69,7 @@ impl BranchTab {
             self.focused_block == BranchBlock::Local,
             "Branches".to_string(),
         );
-        let text = git
-            .branch
-            .branches
-            .iter()
-            .filter(|branch| branch.state == BranchType::Local)
-            .map(|branch| branch.name.clone())
-            .collect::<Vec<String>>()
-            .join("\n");
-        let paragraph = Paragraph::new(text)
+        let paragraph = Paragraph::new(git.branch.local_branches.clone().join("\n"))
             .centered()
             .scroll((self.pos_local_branches, 0))
             .block(block);
@@ -85,15 +81,8 @@ impl BranchTab {
             self.focused_block == BranchBlock::Remote,
             "Remote".to_string(),
         );
-        let text = git
-            .branch
-            .branches
-            .iter()
-            .filter(|branch| branch.state == BranchType::Remote)
-            .map(|branch| branch.name.clone())
-            .collect::<Vec<String>>()
-            .join("\n");
-        let paragraph = Paragraph::new(text)
+
+        let paragraph = Paragraph::new(git.branch.remote_branches.clone().join("\n"))
             .centered()
             .scroll((self.pos_remote_branches, 0))
             .block(block);

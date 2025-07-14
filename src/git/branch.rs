@@ -1,18 +1,21 @@
 use git2::{BranchType, Error as GitError, Repository};
 
-#[derive(Clone)]
-pub struct BranchInfo {
-    pub name: String,
-    pub state: BranchType,
-}
-
 pub struct Branch {
     pub current: String,
-    pub branches: Vec<BranchInfo>,
+    pub local_branches: Vec<String>,
+    pub remote_branches: Vec<String>,
 }
 
 impl Branch {
     pub fn new(repo: &Repository) -> Self {
+        let (remotes, locals) = match Branch::get_list_branch_lists(repo) {
+            Ok(value) => value,
+            Err(_e) => (
+                vec!["failed to get branches".to_string()],
+                vec!["failed to get branches".to_string()],
+            ),
+        };
+
         Branch {
             current: match Branch::get_current_branch_name(repo) {
                 Ok(branch_name) => branch_name,
@@ -21,13 +24,8 @@ impl Branch {
                     std::process::exit(1);
                 }
             },
-            branches: match Branch::get_list_branches(repo) {
-                Ok(list) => list,
-                Err(_e) => vec![BranchInfo {
-                    name: "cannot get list of branches".to_string(),
-                    state: BranchType::Local,
-                }],
-            },
+            local_branches: locals,
+            remote_branches: remotes,
         }
     }
 
@@ -41,20 +39,21 @@ impl Branch {
         }
     }
 
-    fn get_list_branches(repo: &Repository) -> Result<Vec<BranchInfo>, git2::Error> {
+    fn get_list_branch_lists(repo: &Repository) -> Result<(Vec<String>, Vec<String>), git2::Error> {
         let branches = repo.branches(None)?; // None = toutes les branches
-        let mut branch_list = Vec::new();
+        let mut remote_branches: Vec<String> = Vec::new();
+        let mut local_branches: Vec<String> = Vec::new();
 
         for branch_result in branches {
             let (branch, branch_type) = branch_result?;
             if let Some(name) = branch.name()? {
-                branch_list.push(BranchInfo {
-                    name: name.to_string(),
-                    state: branch_type,
-                });
+                match branch_type {
+                    BranchType::Local => local_branches.push(name.to_string()),
+                    BranchType::Remote => remote_branches.push(name.to_string()),
+                };
             }
         }
 
-        Ok(branch_list)
+        Ok((remote_branches, local_branches))
     }
 }
