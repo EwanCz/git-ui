@@ -7,11 +7,11 @@ use ratatui::{
 };
 use std::{path::Path, sync::mpsc, thread};
 
-use crate::git::{execute_push, get_repository, Commit, CommitMode, PushMode};
+use crate::git::{execute_push, get_repository, Branch, Commit, CommitMode, PushMode};
 
 pub struct Git {
     pub repo: Repository,
-    pub branch: String,
+    pub branch: Branch,
     pub input: String,
     pub character_index: usize,
     pub messages: Vec<String>,
@@ -23,10 +23,10 @@ pub struct Git {
 }
 
 impl Git {
-    pub fn new(repository: Repository, current_branch: String) -> Self {
+    pub fn new(repository: Repository) -> Self {
         Git {
+            branch: Branch::new(&repository),
             repo: repository,
-            branch: current_branch,
             input: String::new(),
             character_index: 0,
             commit_mode: CommitMode::Normal,
@@ -165,7 +165,7 @@ impl Git {
                 return;
             }
         };
-        let branch = self.branch.clone();
+        let branch = self.branch.current.clone();
 
         thread::spawn(move || match execute_push(repo, branch, tx.clone()) {
             Ok(value) => {
