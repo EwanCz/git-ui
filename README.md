@@ -40,7 +40,7 @@ Maximun deepth is set to 5
 
 ### 🌐 Global
 - `q` - Quit
-- `1-2-3` - Switch between panels with your number
+- `1-2-3` - Switch between panels
 - `?` - Show help
 - `Up/Down` - Navigate in blocks
 - `Control direction` - Navigate between blocks
@@ -64,6 +64,11 @@ Maximun deepth is set to 5
 
 #### unstaged block
 - `a` - add the selected file
+
+### 🌳 Branch Panel
+Checkout on remote branch make a local version of it
+
+- `c` - Checkout branch
 
 ## 🛠️ Technologies Used
 
