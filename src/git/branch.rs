@@ -74,6 +74,19 @@ impl Branch {
         Ok(())
     }
 
+    pub fn delete_branch(&mut self, branch_name: &str, repo: &Repository) -> Result<(), GitError> {
+        if branch_name == self.current {
+            return Err(git2::Error::from_str("Cannot delete the current branch"));
+        }
+        // Find and delete local branch
+        let mut branch = repo.find_branch(branch_name, BranchType::Local)?;
+
+        // Delete the branch
+        branch.delete()?;
+
+        Ok(())
+    }
+
     fn get_current_branch_name(repo: &Repository) -> Result<String, GitError> {
         let head = repo.head()?;
 
