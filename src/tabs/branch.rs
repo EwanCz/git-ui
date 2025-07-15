@@ -51,12 +51,27 @@ impl BranchTab {
                     BranchBlock::Remote => (BranchType::Remote, self.pos_remote_branches as usize),
                 };
                 let _ = git.branch.checkout(branchtype, pos, &git.repo);
-                self.pos_local_branches = 0;
-                self.pos_remote_branches = 0;
-                git.branch = Branch::new(&git.repo);
+                self.reset_branch(git);
+            }
+            KeyCode::Char('d') => {
+                if self.focused_block == BranchBlock::Remote {
+                    return;
+                }
+                let branch_name: String =
+                    git.branch.local_branches[self.pos_local_branches as usize].clone();
+                let _ = git.branch.delete_branch(&branch_name, &git.repo);
+                self.reset_branch(git);
             }
             _ => {}
         }
+    }
+
+    fn reset_branch(&mut self, git: &mut Git) {
+        self.pos_local_branches = 0;
+        self.pos_remote_branches = 0;
+        git.branch = Branch::new(&git.repo);
+        self.nb_local_branch = git.branch.local_branches.len() as u16;
+        self.nb_remote_branch = git.branch.remote_branches.len() as u16;
     }
 
     pub fn draw(&self, frame: &mut Frame, content: Rect, git: &Git) {
