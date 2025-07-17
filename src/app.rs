@@ -63,6 +63,11 @@ impl App {
             }
             Pages::BranchPAGE => {
                 self.branch_page.draw(frame, content, &self.git);
+                if self.branch_page.newbranch_popup.activated {
+                    self.branch_page
+                        .newbranch_popup
+                        .draw_popup(frame, content, "New branch");
+                }
             }
             _ => {}
         }
@@ -88,6 +93,11 @@ impl App {
         }
         if self.git.commit_popup.activated {
             self.git.commit_key_event(key_event);
+            return;
+        }
+        if self.branch_page.newbranch_popup.activated {
+            self.branch_page
+                .newbranch_key_event(key_event, &mut self.git);
             return;
         }
         match self.page {
