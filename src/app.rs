@@ -13,7 +13,7 @@ use std::{io, time::Duration};
 use std::cell::RefCell;
 
 use crate::{
-    git::{CommitMode, Git, PushMode},
+    git::{Git, PushMode},
     pages::Pages,
     tabs::{BranchTab, StatusTab},
 };
@@ -54,8 +54,8 @@ impl App {
                 self.status_page
                     .borrow_mut()
                     .draw(frame, content, &self.git);
-                if self.git.commit_mode == CommitMode::Commit {
-                    self.git.draw_commit(frame, content);
+                if self.git.commit_popup.activated {
+                    self.git.commit_popup.draw_popup(frame, content, "Commit");
                 }
                 if self.git.push_mode == PushMode::Push {
                     self.git.draw_push(frame, content);
@@ -86,7 +86,7 @@ impl App {
             self.git.push_key_event(key_event);
             return;
         }
-        if self.git.commit_mode == CommitMode::Commit {
+        if self.git.commit_popup.activated {
             self.git.commit_key_event(key_event);
             return;
         }

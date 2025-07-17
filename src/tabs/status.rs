@@ -49,9 +49,7 @@ impl StatusTab {
         match key_event.code {
             KeyCode::Down => self.scroll_down(),
             KeyCode::Up => self.scroll_up(),
-            KeyCode::Char('c') => {
-                git.change_commit_mode();
-            }
+            KeyCode::Char('c') => git.commit_popup.activated = true,
             KeyCode::Char('p') => {
                 git.push_mode = PushMode::Push;
             }

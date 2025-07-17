@@ -12,6 +12,8 @@ use git::{get_repository, Git};
 mod pages;
 use pages::Pages;
 
+mod popup;
+
 use crate::tabs::BranchTab;
 
 fn main() -> io::Result<()> {
