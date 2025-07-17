@@ -8,6 +8,7 @@ pub struct Popup {
     pub input: String,
     pub character_index: usize,
     pub messages: Vec<String>,
+    pub activated: bool,
 }
 
 impl Popup {
@@ -16,6 +17,7 @@ impl Popup {
             input: String::new(),
             character_index: 0,
             messages: Vec::new(),
+            activated: false,
         }
     }
 
@@ -84,5 +86,11 @@ impl Popup {
         ));
         frame.render_widget(Clear, content);
         frame.render_widget(text, content);
+    }
+}
+
+impl Default for Popup {
+    fn default() -> Self {
+        Popup::new()
     }
 }
