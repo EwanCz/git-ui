@@ -87,6 +87,16 @@ impl Branch {
         Ok(())
     }
 
+    pub fn create_branch(&mut self, branch_name: &str, repo: &Repository) -> Result<(), GitError> {
+        let head = repo.head()?;
+        let last_commit = head.peel_to_commit()?;
+        match repo.branch(branch_name, &last_commit, false) {
+            Ok(_branch) => {}
+            Err(err) => return Err(err),
+        };
+        Ok(())
+    }
+
     fn get_current_branch_name(repo: &Repository) -> Result<String, GitError> {
         let head = repo.head()?;
 
