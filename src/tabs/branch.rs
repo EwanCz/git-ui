@@ -8,6 +8,7 @@ use ratatui::{
 
 use crate::{
     git::{Branch, Git},
+    popup::Popup,
     tabs::mover::{Move, DIRECTION},
 };
 
@@ -22,7 +23,7 @@ pub struct BranchTab {
     pub pos_remote_branches: u16,
     pub nb_remote_branch: u16,
     pub nb_local_branch: u16,
-
+    pub newbranch_popup: Popup,
     pub focused_block: BranchBlock,
 }
 
@@ -33,6 +34,7 @@ impl BranchTab {
             pos_remote_branches: 0,
             nb_local_branch: 0,
             nb_remote_branch: 0,
+            newbranch_popup: Popup::new(),
             focused_block: BranchBlock::Local,
         }
     }
@@ -61,6 +63,24 @@ impl BranchTab {
                     git.branch.local_branches[self.pos_local_branches as usize].clone();
                 let _ = git.branch.delete_branch(&branch_name, &git.repo);
                 self.reset_branch(git);
+            }
+            KeyCode::Char('n') => self.newbranch_popup.activated = true,
+            _ => {}
+        }
+    }
+
+    pub fn newbranch_key_event(&mut self, key_event: KeyEvent, git: &mut Git) {
+        match key_event.code {
+            KeyCode::Esc => self.newbranch_popup.activated = false,
+            KeyCode::Char(to_insert) => self.newbranch_popup.enter_char(to_insert),
+            KeyCode::Left => self.newbranch_popup.move_cursor_left(),
+            KeyCode::Right => self.newbranch_popup.move_cursor_right(),
+            KeyCode::Backspace => self.newbranch_popup.delete_char(),
+            KeyCode::Enter => {
+                let _ = git.branch.create_branch("test", &git.repo);
+                self.reset_branch(git);
+                self.newbranch_popup.input = String::new();
+                self.newbranch_popup.activated = false
             }
             _ => {}
         }

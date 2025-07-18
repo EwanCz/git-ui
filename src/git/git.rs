@@ -1,21 +1,21 @@
 use crossterm::event::{KeyCode, KeyEvent};
 use git2::{Error as GitError, Repository};
 use ratatui::{
-    layout::{Constraint, Flex, Layout, Position, Rect},
+    layout::{Constraint, Flex, Layout, Rect},
     widgets::{Block, Clear, Paragraph},
     Frame,
 };
 use std::{path::Path, sync::mpsc, thread};
 
-use crate::git::{execute_push, get_repository, Branch, Commit, CommitMode, PushMode};
+use crate::{
+    git::{execute_push, get_repository, Branch, Commit, PushMode},
+    popup::Popup,
+};
 
 pub struct Git {
     pub repo: Repository,
     pub branch: Branch,
-    pub input: String,
-    pub character_index: usize,
-    pub messages: Vec<String>,
-    pub commit_mode: CommitMode,
+    pub commit_popup: Popup,
     pub push_mode: PushMode,
     pub push_message: String,
     pub push_process: bool,
@@ -27,10 +27,7 @@ impl Git {
         Git {
             branch: Branch::new(&repository),
             repo: repository,
-            input: String::new(),
-            character_index: 0,
-            commit_mode: CommitMode::Normal,
-            messages: Vec::new(),
+            commit_popup: Popup::new(),
             push_mode: PushMode::Normal,
             push_message: String::from("Are you sure you want to push your work ?"),
             push_process: false,
@@ -82,30 +79,6 @@ impl Git {
         Ok(())
     }
 
-    pub fn change_commit_mode(&mut self) {
-        self.commit_mode = match self.commit_mode {
-            CommitMode::Normal => CommitMode::Commit,
-            CommitMode::Commit => CommitMode::Normal,
-        }
-    }
-
-    pub fn draw_commit(&self, frame: &mut Frame, content: Rect) {
-        let block = Block::bordered().title("Commit");
-        let text = Paragraph::new(self.input.clone()).block(block);
-
-        let vertical = Layout::vertical([Constraint::Max(4)]).flex(Flex::Center);
-        let horizontal = Layout::horizontal([Constraint::Percentage(60)]).flex(Flex::Center);
-        let [content] = vertical.areas(content);
-        let [content] = horizontal.areas(content);
-
-        frame.set_cursor_position(Position::new(
-            content.x + 1 + self.character_index as u16,
-            content.y + 1,
-        ));
-        frame.render_widget(Clear, content);
-        frame.render_widget(text, content);
-    }
-
     pub fn draw_push(&self, frame: &mut Frame, content: Rect) {
         let block = Block::bordered().title("Push");
         let text = Paragraph::new(self.push_message.clone())
@@ -123,14 +96,15 @@ impl Git {
 
     pub fn commit_key_event(&mut self, key_event: KeyEvent) {
         match key_event.code {
-            KeyCode::Esc => self.change_commit_mode(),
-            KeyCode::Char(to_insert) => self.enter_char_commit(to_insert),
-            KeyCode::Left => self.move_cursor_left(),
-            KeyCode::Right => self.move_cursor_right(),
-            KeyCode::Backspace => self.delete_char(),
+            KeyCode::Esc => self.commit_popup.activated = false,
+            KeyCode::Char(to_insert) => self.commit_popup.enter_char(to_insert),
+            KeyCode::Left => self.commit_popup.move_cursor_left(),
+            KeyCode::Right => self.commit_popup.move_cursor_right(),
+            KeyCode::Backspace => self.commit_popup.delete_char(),
             KeyCode::Enter => {
                 let _ = self.git_commit();
-                self.commit_mode = CommitMode::Normal
+                self.commit_popup.input = String::new();
+                self.commit_popup.activated = false
             }
             _ => {}
         }
