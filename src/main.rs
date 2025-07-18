@@ -14,7 +14,7 @@ use pages::Pages;
 
 mod popup;
 
-use crate::tabs::BranchTab;
+use crate::{popup::Popup, tabs::BranchTab};
 
 fn main() -> io::Result<()> {
     let repository = match get_repository() {
@@ -34,6 +34,7 @@ fn main() -> io::Result<()> {
         status_page: StatusTab::new().into(),
         branch_page: BranchTab::new(),
         git: Git::new(repository),
+        message_popup: Popup::new(),
     };
 
     program.run(&mut terminal)?;

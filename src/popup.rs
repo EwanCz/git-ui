@@ -1,3 +1,4 @@
+use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
     layout::{Constraint, Flex, Layout, Position, Rect},
     widgets::{Block, Clear, Paragraph},
@@ -84,6 +85,34 @@ impl Popup {
             content.x + 1 + self.character_index as u16,
             content.y + 1,
         ));
+        frame.render_widget(Clear, content);
+        frame.render_widget(text, content);
+    }
+
+    pub fn message_key_event(&mut self, key_event: KeyEvent) {
+        match key_event.code {
+            KeyCode::Esc | KeyCode::Enter => {
+                self.activated = false;
+                self.input = String::new();
+            }
+            _ => {}
+        }
+    }
+
+    pub fn set_message(&mut self, message: String) {
+        self.activated = true;
+        self.input = message
+    }
+
+    pub fn draw_popup_message(&self, frame: &mut Frame, content: Rect, name_block: &str) {
+        let block = Block::bordered().title(name_block);
+        let text = Paragraph::new(self.input.clone()).centered().block(block);
+
+        let vertical = Layout::vertical([Constraint::Max(4)]).flex(Flex::Center);
+        let horizontal = Layout::horizontal([Constraint::Percentage(60)]).flex(Flex::Center);
+        let [content] = vertical.areas(content);
+        let [content] = horizontal.areas(content);
+
         frame.render_widget(Clear, content);
         frame.render_widget(text, content);
     }

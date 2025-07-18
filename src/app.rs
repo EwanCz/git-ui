@@ -15,12 +15,14 @@ use std::cell::RefCell;
 use crate::{
     git::{Git, PushMode},
     pages::Pages,
+    popup::Popup,
     tabs::{BranchTab, StatusTab},
 };
 
 pub struct App {
     pub exit: bool,
     pub page: Pages,
+    pub message_popup: Popup,
     pub status_page: RefCell<StatusTab>,
     pub branch_page: BranchTab,
     pub git: Git,
@@ -71,6 +73,10 @@ impl App {
             }
             _ => {}
         }
+        if self.message_popup.activated {
+            self.message_popup
+                .draw_popup_message(frame, content, "message");
+        }
         frame.render_widget(self, frame.area());
     }
 
@@ -87,6 +93,10 @@ impl App {
     }
 
     fn handle_key_event(&mut self, key_event: KeyEvent) {
+        if self.message_popup.activated {
+            self.message_popup.message_key_event(key_event);
+            return;
+        }
         if self.git.push_mode == PushMode::Push {
             self.git.push_key_event(key_event);
             return;
@@ -96,8 +106,13 @@ impl App {
             return;
         }
         if self.branch_page.newbranch_popup.activated {
-            self.branch_page
-                .newbranch_key_event(key_event, &mut self.git);
+            match self
+                .branch_page
+                .newbranch_key_event(key_event, &mut self.git)
+            {
+                Ok(_) => {}
+                Err(str) => self.message_popup.set_message(str),
+            };
             return;
         }
         match self.page {

@@ -69,7 +69,11 @@ impl BranchTab {
         }
     }
 
-    pub fn newbranch_key_event(&mut self, key_event: KeyEvent, git: &mut Git) {
+    pub fn newbranch_key_event(
+        &mut self,
+        key_event: KeyEvent,
+        git: &mut Git,
+    ) -> Result<(), String> {
         match key_event.code {
             KeyCode::Esc => self.newbranch_popup.activated = false,
             KeyCode::Char(to_insert) => self.newbranch_popup.enter_char(to_insert),
@@ -77,13 +81,20 @@ impl BranchTab {
             KeyCode::Right => self.newbranch_popup.move_cursor_right(),
             KeyCode::Backspace => self.newbranch_popup.delete_char(),
             KeyCode::Enter => {
-                let _ = git.branch.create_branch("test", &git.repo);
+                let create = git
+                    .branch
+                    .create_branch(&self.newbranch_popup.input, &git.repo);
                 self.reset_branch(git);
                 self.newbranch_popup.input = String::new();
-                self.newbranch_popup.activated = false
+                self.newbranch_popup.activated = false;
+                match create {
+                    Ok(_value) => {}
+                    Err(err) => return Err(err.message().to_string()),
+                }
             }
             _ => {}
         }
+        Ok(())
     }
 
     fn reset_branch(&mut self, git: &mut Git) {
