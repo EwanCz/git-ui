@@ -69,6 +69,8 @@ Maximun deepth is set to 5
 Checkout on remote branch make a local version of it
 
 - `c` - Checkout branch
+- `n` - new branch (local only.)
+- `d` - delete branch (local only. Be normal and remove remote branch from platform [github, gitlab, etc...])
 
 ## 🛠️ Technologies Used
 
